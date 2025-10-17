@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Sales Dashboard</title>
+<title>Kasam Sales Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <style>
@@ -31,7 +30,6 @@
 </head>
 <body class="antialiased text-slate-700">
 
-<!-- =========== LOGIN SECTION =========== -->
 <div id="login-section" class="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <img class="mx-auto h-40 w-auto" src="https://www.dropbox.com/scl/fi/vmprhd0i0781yytkkukfg/Untitled-Kasam-Sales-Insights.png?rlkey=hazshd3m3mkftjssizqfzpmw3&st=f00pivkz&raw=1" alt="Kasam Fashions">
@@ -48,7 +46,6 @@
                         Email 
                     </label>
                     <div class="mt-1">
-                        <!-- MODIFIED: Removed the value attribute -->
                         <input id="email" name="email" type="email" autocomplete="email" required class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                     </div>
                 </div>
@@ -72,8 +69,14 @@
       </button>
   </div>
 </div>
-
-                 <p id="login-error" class="text-sm text-red-600 hidden">Invalid Email or password. Please try again.</p>
+                <div class="flex items-center justify-end">
+                    <div class="text-sm">
+                        <a href="#" id="forgot-password-link" class="font-medium text-blue-600 hover:text-blue-500">
+                            Forgot your password?
+                        </a>
+                    </div>
+                </div>
+                <p id="login-error" class="text-sm text-red-600 hidden">Invalid Email or password. Please try again.</p>
 
                 <div>
                     <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -85,7 +88,6 @@
     </div>
 </div>
 
-<!-- =========== DASHBOARD SECTION =========== -->
 <div id="dashboard-section" style="display: none;">
   <header class="bg-white shadow-md">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -94,7 +96,7 @@
                  <img src="https://www.dropbox.com/scl/fi/vmprhd0i0781yytkkukfg/Untitled-Kasam-Sales-Insights.png?rlkey=hazshd3m3mkftjssizqfzpmw3&st=f00pivkz&raw=1" 
                  alt="Kasam Sales Insights Logo" 
                  class="h-20 w-auto mr-4 object-contain mt-4"> 
-                <h1 class="text-lg font-extrabold text-gray-800 mt-4">Sales Dashboard</h1>
+                <h1 class="text-Base font-extrabold text-gray-800 mt-4">Sales Dashboard</h1>
             </div>
             <button id="logout-button" class="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
@@ -236,6 +238,8 @@ const prevPageButton = document.getElementById('prev-page-button');
 const nextPageButton = document.getElementById('next-page-button');
 const currentPageSpan = document.getElementById('current-page');
 const totalPagesSpan = document.getElementById('total-pages');
+// NEW SELECTOR FOR FORGOT PASSWORD
+const forgotPasswordLink = document.getElementById('forgot-password-link');
 
 // =========== LOGIN & AUTHENTICATION ===========
 async function handleLogin(event) {
@@ -249,6 +253,33 @@ async function handleLogin(event) {
     } catch (error) {
         console.error("Firebase Login Error:", error.message);
         loginError.textContent = "Invalid credentials. Please check your Email and password.";
+        loginError.classList.remove('hidden');
+    }
+}
+
+// NEW FUNCTION FOR FORGOT PASSWORD
+async function handleForgotPassword(event) {
+    event.preventDefault();
+    const emailInput = document.getElementById('email');
+    const email = emailInput.value.trim();
+    loginError.classList.add('hidden');
+
+    if (!email) {
+        loginError.textContent = "Please enter your email address above before clicking 'Forgot your password?'.";
+        loginError.classList.remove('hidden');
+        emailInput.focus();
+        return;
+    }
+
+    try {
+        await auth.sendPasswordResetEmail(email);
+        alert(`Password reset email sent successfully to ${email}. Please check your inbox.`);
+        // Optional: Clear the error message if it was visible
+        loginError.classList.add('hidden');
+    } catch (error) {
+        console.error("Firebase Password Reset Error:", error.message);
+        // Inform the user about the error (e.g., email not found)
+        loginError.textContent = "Failed to send reset email. Ensure the email is correct and registered, then try again.";
         loginError.classList.remove('hidden');
     }
 }
@@ -662,7 +693,12 @@ togglePasswordButton.addEventListener('click', () => {
   togglePasswordButton.innerHTML = `<i data-lucide="${isPasswordVisible ? 'eye-off' : 'eye'}" class="w-5 h-5"></i>`;
   lucide.createIcons();
 });
+
+// Attach event listeners
 loginForm.addEventListener('submit', handleLogin);
+if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener('click', handleForgotPassword);
+}
     
     auth.onAuthStateChanged(user => {
         if (user) {
@@ -676,9 +712,4 @@ loginForm.addEventListener('submit', handleLogin);
 });
 </script>
 </body>
-
 </html>
-
-
-
-
